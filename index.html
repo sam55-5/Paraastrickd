@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Una galaxia de amor para Astrickd</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05030f;--ink:#f6eeff;--soft:#cdb0e6;--pink:#b46bff;--glass:rgba(30,8,20,.72);--line:rgba(180,107,255,.35);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:radial-gradient(circle at 50% 40%,#2a1450,var(--bg) 70%);color:var(--ink);overflow:hidden;font-family:'Inter',system-ui,sans-serif;touch-action:none}
+canvas{position:fixed;inset:0;display:block}
+.card{position:fixed;left:50%;top:50%;width:min(86vw,360px);transform:translate(-50%,-46%) scale(.96);opacity:0;pointer-events:none;transition:opacity .7s,transform .7s;background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:30px 26px 26px;text-align:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 0 60px rgba(180,107,255,.25)}
+.card.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.card .ico{font-size:1.6rem;color:var(--pink);margin-bottom:8px}
+.card h1{font-family:'Playfair Display',Georgia,serif;font-size:1.9rem;line-height:1.15;margin:0 0 12px;font-weight:700}
+.card p{margin:0 0 20px;color:var(--soft);font-size:1rem;line-height:1.55}
+.card .tag{font-size:.7rem;letter-spacing:.25em;color:var(--pink);margin-bottom:14px}
+button{font:inherit;font-weight:600;font-size:.95rem;color:#fff;background:linear-gradient(135deg,#b46bff,#6a2fd0);border:0;border-radius:999px;padding:12px 26px;cursor:pointer;box-shadow:0 6px 22px rgba(180,107,255,.4)}
+#again{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);opacity:0;pointer-events:none;transition:opacity .6s;font-size:.85rem;padding:10px 20px}
+#again.on{opacity:1;pointer-events:auto}
+#hint{position:fixed;left:0;right:0;bottom:calc(66px + env(safe-area-inset-bottom,0px));text-align:center;font-size:.75rem;color:var(--soft);opacity:0;transition:opacity 1s;pointer-events:none}
+#hint.on{opacity:.8}
+.card::before,.card::after{position:absolute;color:var(--pink);animation:tw 2.4s infinite;font-size:1.1rem}
+.card::before{content:'✦';top:12px;left:16px}
+.card::after{content:'✧';bottom:12px;right:16px;animation-delay:1.2s}
+@keyframes tw{50%{opacity:.2;transform:scale(.7)}}
+@keyframes sh{to{background-position:200% 0}}
+@keyframes gl{50%{box-shadow:0 0 90px rgba(180,107,255,.45)}}
+.card{animation:gl 4s ease-in-out infinite}
+.card h1{background:linear-gradient(90deg,#fff,#d9b3ff,#ff9ad1,#fff);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 5s linear infinite}
+</style>
+</head>
+<body>
+<div class="card on" id="card">
+  <div class="ico">♥</div>
+  <div class="tag" id="tag">PARA ASTRICKD</div>
+  <h1 id="t">Una galaxia de amor para ti</h1>
+  <p id="p">Hice este universo pequeñito solo para decirte cosas bonitas, porque eres de las estrellas que más brillan.</p>
+  <button id="b">Entrar a nuestro universo</button>
+</div>
+<div id="hint">Arrastra para girar la galaxia</div>
+<button id="again">♡ Volver a leer</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+try{
+var W=innerWidth,H=innerHeight;
+var scene=new THREE.Scene();
+var cam=new THREE.PerspectiveCamera(60,W/H,.1,300);
+var ren=new THREE.WebGLRenderer({antialias:true});
+ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(W,H);ren.setClearColor(0x05030f);
+document.body.prepend(ren.domElement);
+
+function pts(n,fn,size,op){
+  var pos=new Float32Array(n*3),col=new Float32Array(n*3),o={p:[0,0,0],c:[1,1,1]};
+  for(var i=0;i<n;i++){fn(o,i);pos.set(o.p,i*3);col.set(o.c,i*3)}
+  var g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.BufferAttribute(col,3));
+  return new THREE.Points(g,new THREE.PointsMaterial({size:size,vertexColors:true,transparent:true,opacity:op||1,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true}));
+}
+
+/* galaxia */
+var galaxy=pts(16000,function(o){
+  var arm=Math.floor(Math.random()*3),r=Math.pow(Math.random(),1.5)*17+.8;
+  var a=arm*Math.PI*2/3+r*.5+(Math.random()-.5)*(.25+r*.05);
+  var sp=(Math.random()-.5)*(.6+r*.12);
+  o.p=[Math.cos(a)*r+sp*.4,(Math.random()-.5)*.5*(1.2-r/22),Math.sin(a)*r+sp*.4];
+  var k=Math.min(r/17,1),c=new THREE.Color().setHSL(.74+.14*k,.9,.8-.35*k);
+  o.c=[c.r,c.g,c.b];
+},.075,.95);
+scene.add(galaxy);
+
+/* corazón */
+var heart=pts(7000,function(o){
+  var t=Math.random()*Math.PI*2,s=.26*(.82+.2*Math.random());
+  var x=16*Math.pow(Math.sin(t),3),y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+  o.p=[x*s,y*s,(Math.random()-.5)*1.6*(1-Math.abs(x)/18)];
+  var c=new THREE.Color().setHSL(.9,.95,.6+Math.random()*.25);o.c=[c.r,c.g,c.b];
+},.09,1);
+heart.position.y=8.5;scene.add(heart);
+
+/* agujero central */
+var hole=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:0x000000}));
+hole.rotation.x=-Math.PI/2;hole.position.y=.02;scene.add(hole);
+var ring=pts(500,function(o){var a=Math.random()*Math.PI*2,r=1.05+Math.random()*.35;o.p=[Math.cos(a)*r,0,Math.sin(a)*r];o.c=[.85,.75,1]},.1,1);
+scene.add(ring);
+
+/* estrellas */
+scene.add(pts(1500,function(o){
+  var u=Math.random()*Math.PI*2,v=Math.acos(2*Math.random()-1),r=90+Math.random()*60;
+  o.p=[r*Math.sin(v)*Math.cos(u),r*Math.cos(v),r*Math.sin(v)*Math.sin(u)];o.c=[.8,.8,1];
+},.5,.8));
+
+/* textos y corazones flotantes */
+function tex(draw,w,h){
+  var c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');draw(x,w,h);
+  return new THREE.CanvasTexture(c);
+}
+function sprite(t,sx,sy){
+  var s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));
+  s.scale.set(sx,sy,1);return s;
+}
+var orbit=[];
+var words=['Astrickd','Eres mi estrella','Me encantas','Tu sonrisa ✦','Eres increíble','Mi persona favorita','Eres hermosa','Qué suerte conocerte','Me haces feliz','Brillas en el cielo','Pienso en ti'];
+words.forEach(function(w,i){
+  var t=tex(function(x,W,H){
+    x.font='700 54px Playfair Display, Georgia, serif';x.textAlign='center';x.textBaseline='middle';
+    x.shadowColor='#b46bff';x.shadowBlur=22;x.fillStyle='#f1e3ff';x.fillText(w,W/2,H/2);
+  },512,128);
+  var s=sprite(t,5.2,1.3);scene.add(s);
+  orbit.push({s:s,r:6+(i%4)*2.6+Math.random(),a:i*Math.PI*2/words.length,sp:.0018+Math.random()*.0012,y:.8+Math.random()*3.5,ph:Math.random()*6});
+});
+var heartTex=tex(function(x,W,H){
+  x.font='80px serif';x.textAlign='center';x.textBaseline='middle';x.shadowColor='#ff5fa8';x.shadowBlur=18;x.fillStyle='#ff7ac0';x.fillText('♥',W/2,H/2+4);
+},128,128);
+for(var i=0;i<22;i++){
+  var s=sprite(heartTex,.8+Math.random()*.7,.8+Math.random()*.7);scene.add(s);
+  orbit.push({s:s,r:4+Math.random()*13,a:Math.random()*6.28,sp:.002+Math.random()*.003,y:-.5+Math.random()*5,ph:Math.random()*6});
+}
+
+/* decoración extra */
+var extraUpd=[],tw=[];
+function glowTex(col){return tex(function(x,W,H){var g=x.createRadialGradient(W/2,H/2,0,W/2,H/2,W/2);g.addColorStop(0,col+'aa');g.addColorStop(.4,col+'33');g.addColorStop(1,col+'00');x.fillStyle=g;x.fillRect(0,0,W,H)},256,256)}
+var neb=new THREE.Group();scene.add(neb);
+[['#b46bff',-26,-6,-30],['#ff5fa8',30,8,-34],['#5f7bff',0,14,-45],['#c04bff',-34,16,10],['#ff5fa8',22,-8,32]].forEach(function(n){
+  var s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(n[0]),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.5}));
+  s.scale.set(48,48,1);s.position.set(n[1],n[2],n[3]);neb.add(s);
+});
+extraUpd.push(function(){neb.rotation.y+=.0004});
+var starTex=['✦','★','✧'].map(function(ch){return tex(function(x,W,H){x.font='90px serif';x.textAlign='center';x.textBaseline='middle';x.shadowColor='#d9b3ff';x.shadowBlur=20;x.fillStyle='#f3e3ff';x.fillText(ch,W/2,H/2+4)},128,128)});
+for(var i=0;i<34;i++){
+  var s=new THREE.Sprite(new THREE.SpriteMaterial({map:starTex[i%3],transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+  var k=.5+Math.random()*.9;s.scale.set(k,k,1);scene.add(s);
+  orbit.push({s:s,r:3+Math.random()*17,a:Math.random()*6.28,sp:.001+Math.random()*.003,y:-2+Math.random()*10,ph:Math.random()*6});
+  tw.push({m:s.material,ph:Math.random()*6,sp:1+Math.random()*2});
+}
+extraUpd.push(function(){tw.forEach(function(o){o.m.opacity=.45+.55*Math.abs(Math.sin(t0*o.sp+o.ph))})});
+var halo=pts(1100,function(o){var a=Math.random()*6.28,r=5.4+(Math.random()-.5)*.5;o.p=[Math.cos(a)*r,(Math.random()-.5)*.25,Math.sin(a)*r];var c=new THREE.Color().setHSL(.8+Math.random()*.1,.9,.75);o.c=[c.r,c.g,c.b]},.08,.9);
+halo.position.y=8.5;halo.rotation.x=.35;scene.add(halo);
+extraUpd.push(function(){halo.rotation.y+=.008});
+var dust=pts(3000,function(o){var a=Math.random()*6.28,r=19+Math.random()*5;o.p=[Math.cos(a)*r,(Math.random()-.5)*1.2,Math.sin(a)*r];var c=new THREE.Color().setHSL(.7+Math.random()*.12,.8,.65);o.c=[c.r,c.g,c.b]},.07,.7);
+scene.add(dust);extraUpd.push(function(){dust.rotation.y-=.0006});
+var petalTex=tex(function(x,W,H){x.font='80px serif';x.textAlign='center';x.textBaseline='middle';x.shadowColor='#ff7ac0';x.shadowBlur=14;x.fillStyle='#ffb3dc';x.fillText('✿',W/2,H/2+4)},128,128);
+var petals=[];
+for(var i=0;i<40;i++){
+  var s=sprite(petalTex,.6,.6);s.position.set((Math.random()-.5)*34,Math.random()*20-3,(Math.random()-.5)*34);scene.add(s);
+  petals.push({s:s,v:.01+Math.random()*.02,d:Math.random()*6});
+}
+extraUpd.push(function(){petals.forEach(function(p){p.s.position.y-=p.v;p.s.position.x+=Math.sin(t0+p.d)*.006;if(p.s.position.y<-4)p.s.position.y=17})});
+var shoot=[];
+for(var i=0;i<3;i++){
+  var g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));
+  var l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0,blending:THREE.AdditiveBlending}));
+  l.frustumCulled=false;scene.add(l);shoot.push({l:l,p:new THREE.Vector3(),v:new THREE.Vector3(),life:-Math.random()*300});
+}
+extraUpd.push(function(){shoot.forEach(function(o){
+  o.life--;
+  if(o.life<-200){var a=Math.random()*6.28;o.p.set(Math.cos(a)*30,12+Math.random()*14,Math.sin(a)*30);o.v.set(-Math.cos(a+1)*.7,-.25,-Math.sin(a+1)*.7);o.life=70}
+  if(o.life>0){
+    o.p.add(o.v);var q=o.p.clone().addScaledVector(o.v,-6),a=o.l.geometry.attributes.position;
+    a.setXYZ(0,o.p.x,o.p.y,o.p.z);a.setXYZ(1,q.x,q.y,q.z);a.needsUpdate=true;o.l.material.opacity=Math.min(1,o.life/25);
+  }else o.l.material.opacity=0;
+})});
+
+/* cámara */
+var theta=0,h=8,drag=false,lx=0,ly=0,t0=0;
+addEventListener('pointerdown',function(e){drag=true;lx=e.clientX;ly=e.clientY});
+addEventListener('pointerup',function(){drag=false});
+addEventListener('pointermove',function(e){
+  if(!drag)return;
+  theta-=(e.clientX-lx)*.006;h=Math.max(2.5,Math.min(18,h+(e.clientY-ly)*.04));lx=e.clientX;ly=e.clientY;
+});
+addEventListener('resize',function(){W=innerWidth;H=innerHeight;cam.aspect=W/H;cam.updateProjectionMatrix();ren.setSize(W,H)});
+
+function loop(){
+  requestAnimationFrame(loop);
+  t0+=.016;
+  if(!drag)theta+=.0016;
+  var R=W<H?27:21;
+  cam.position.set(Math.sin(theta)*R,h+Math.sin(t0*.3)*.8,Math.cos(theta)*R);
+  cam.lookAt(0,W<H?4.5:3.5,0);
+  galaxy.rotation.y+=.0009;ring.rotation.y-=.01;
+  heart.rotation.y+=.006;
+  var b=1+.05*Math.sin(t0*3.2)+.03*Math.sin(t0*6.4);heart.scale.set(b,b,b);
+  orbit.forEach(function(o){
+    o.a+=o.sp;o.s.position.set(Math.cos(o.a)*o.r,o.y+Math.sin(t0+o.ph)*.4,Math.sin(o.a)*o.r);
+  });
+  extraUpd.forEach(function(f){f()});
+  ren.render(scene,cam);
+}
+loop();
+}catch(err){console.error(err)}
+
+/* tarjetas */
+var msgs=[
+ {tag:'ESTO ES PARA TI',t:'Eres mi estrella',p:'Entre tantas personas, tú brillas distinto. Desde que te conocí, mis días tienen otro color.',b:'Continuar'},
+ {tag:'LO QUE VEO EN TI',t:'Tan especial',p:'Tu forma de ser, tu risa y tu manera de mirar hacen que cualquiera quiera quedarse a tu lado, Astrickd.',b:'Continuar'},
+ {tag:'LO QUE SIENTO',t:'Me haces feliz',p:'Cuando hablo contigo el tiempo se pasa volando, y siempre me quedo con ganas de más charla, más risas, más de ti.',b:'Continuar'},
+ {tag:'UNA COSA MÁS',t:'Gracias por existir',p:'Si me dejas, me encantaría seguir conociéndote y descubrir juntos cuántas estrellas caben en nuestra galaxia.',b:'Volver a la galaxia'}
+];
+var card=document.getElementById('card'),T=document.getElementById('t'),P=document.getElementById('p'),B=document.getElementById('b'),TAG=document.getElementById('tag'),again=document.getElementById('again'),hint=document.getElementById('hint');
+var idx=-1,timer=null;
+function fill(m){T.textContent=m.t;P.textContent=m.p;B.textContent=m.b;TAG.textContent=m.tag}
+function showNext(){
+  idx++;fill(msgs[idx]);card.classList.add('on');
+  B.onclick=function(){
+    card.classList.remove('on');
+    if(idx<msgs.length-1){timer=setTimeout(showNext,5500)}
+    else{again.classList.add('on')}
+  };
+}
+B.onclick=function(){
+  card.classList.remove('on');hint.classList.add('on');
+  setTimeout(function(){hint.classList.remove('on')},6000);
+  timer=setTimeout(showNext,4500);
+};
+again.onclick=function(){again.classList.remove('on');clearTimeout(timer);idx=-1;showNext()};
+</script>
+</body>
+</html>
